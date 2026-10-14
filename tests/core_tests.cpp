@@ -18,7 +18,7 @@ int main() {
     using namespace ps5discord;
 
     json::Document doc;
-    check(doc.parse(R"({"name":"A\\nB","n":42,"ok":true,"items":[1,2,3],"u":"caf\u00e9"})"), "parse object");
+    check(doc.parse(R"({"name":"A\nB","n":42,"ok":true,"items":[1,2,3],"u":"caf\u00e9"})"), "parse object");
     check(doc.string(doc.object_get(doc.root(), "name")) == "A\nB", "decode escape");
     check(doc.integer(doc.object_get(doc.root(), "n")) == 42, "integer");
     check(doc.boolean(doc.object_get(doc.root(), "ok")), "boolean");
