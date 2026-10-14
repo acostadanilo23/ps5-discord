@@ -51,7 +51,7 @@ The network/service layer is independent from the PS5 UI so the transport can be
 ## Host quick start
 
 ```bash
-sudo apt install -y build-essential cmake pkg-config libcurl4-openssl-dev
+sudo apt install -y build-essential cmake pkg-config libcurl4-openssl-dev libopus-dev
 cmake -S . -B build
 cmake --build build -j
 ctest --test-dir build --output-on-failure

@@ -1,6 +1,7 @@
 #include "ps5discord/json.hpp"
 #include "ps5discord/discord/models.hpp"
 #include "ps5discord/voice/protocol.hpp"
+#include "ps5discord/audio/opus.hpp"
 
 #include <iostream>
 #include <string>
@@ -55,6 +56,16 @@ int main() {
     auto discovery = voice::discovery_request(42);
     check(discovery.size() == 74 && discovery[0] == 0 && discovery[1] == 1 &&
           discovery[7] == 42, "UDP discovery request");
+
+    audio::OpusVoiceEncoder encoder;
+    audio::OpusVoiceDecoder decoder;
+    check(encoder.ready() && decoder.ready(), "Opus codec initialization");
+    std::vector<std::int16_t> silence(audio::kCaptureFrame, 0);
+    std::vector<std::uint8_t> encoded;
+    std::vector<std::int16_t> decoded;
+    check(encoder.encode(silence, encoded) && !encoded.empty(), "Opus encode frame");
+    check(decoder.decode(encoded, decoded) && decoded.size() == audio::kOutputFrame,
+          "Opus decode at 48 kHz");
 
     if (failures == 0) std::cout << "all tests passed\n";
     return failures == 0 ? 0 : 1;

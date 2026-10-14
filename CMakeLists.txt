@@ -9,16 +9,19 @@ option(PS5_DISCORD_BUILD_TESTS "Build host tests" ON)
 
 find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(OPUS REQUIRED IMPORTED_TARGET opus)
 
 add_library(ps5discord_core
     src/config.cpp
     src/discord/rest_client.cpp
     src/discord/service.cpp
     src/voice/protocol.cpp
+    src/audio/opus.cpp
 )
 
 target_include_directories(ps5discord_core PUBLIC include)
-target_link_libraries(ps5discord_core PUBLIC CURL::libcurl Threads::Threads)
+target_link_libraries(ps5discord_core PUBLIC CURL::libcurl Threads::Threads PkgConfig::OPUS)
 target_compile_definitions(ps5discord_core PUBLIC CURL_STATICLIB)
 
 if(MSVC)

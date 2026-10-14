@@ -8,7 +8,7 @@ Ubuntu/Debian/WSL:
 
 ```bash
 sudo apt update
-sudo apt install -y build-essential cmake pkg-config libcurl4-openssl-dev
+sudo apt install -y build-essential cmake pkg-config libcurl4-openssl-dev libopus-dev
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j
 ctest --test-dir build --output-on-failure
