@@ -18,6 +18,7 @@ add_library(ps5discord_core
     src/discord/service.cpp
     src/voice/protocol.cpp
     src/audio/opus.cpp
+    src/audio/device.cpp
 )
 
 target_include_directories(ps5discord_core PUBLIC include)
