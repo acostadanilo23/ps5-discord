@@ -1,5 +1,6 @@
 #include "ps5discord/json.hpp"
 #include "ps5discord/discord/models.hpp"
+#include "ps5discord/voice/protocol.hpp"
 
 #include <iostream>
 #include <string>
@@ -31,6 +32,29 @@ int main() {
     check(message.id == "100", "message id");
     check(message.author.global_name == "Dan", "message author");
     check(message.attachments.size() == 1 && message.attachments[0].filename == "x.png", "attachment");
+
+    json::Document channel_doc;
+    check(channel_doc.parse(R"({"id":"10","type":2,"name":"General"})"), "voice channel json");
+    check(discord::parse_channel(channel_doc, channel_doc.root()).is_voice(), "voice channel type");
+
+    voice::GatewayEvent event;
+    check(voice::parse_gateway_event(R"({"op":2,"d":{"ssrc":123}})", event) &&
+          event.opcode == 2 && event.payload == R"({"ssrc":123})", "voice gateway event");
+    const std::uint8_t binary[] = {0, 4, 30, 1, 2};
+    check(voice::parse_gateway_binary(binary, event) && event.binary && event.sequence == 4 &&
+          event.opcode == 30 && event.payload.size() == 2, "voice binary event");
+    check(voice::identify("g", "u", "s", "t", 1).find("max_dave_protocol_version\":1") != std::string::npos,
+          "voice identifies DAVE capability");
+    const std::uint8_t opaque[] = {1, 2, 3};
+    auto packet = voice::make_rtp({7, 960, 42}, opaque);
+    voice::RtpHeader header;
+    std::span<const std::uint8_t> payload;
+    check(voice::parse_rtp(packet, header, payload) && header.sequence == 7 &&
+          header.timestamp == 960 && header.ssrc == 42 && payload.size() == 3,
+          "RTP header round trip");
+    auto discovery = voice::discovery_request(42);
+    check(discovery.size() == 74 && discovery[0] == 0 && discovery[1] == 1 &&
+          discovery[7] == 42, "UDP discovery request");
 
     if (failures == 0) std::cout << "all tests passed\n";
     return failures == 0 ? 0 : 1;

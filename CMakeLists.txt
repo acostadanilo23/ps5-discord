@@ -14,6 +14,7 @@ add_library(ps5discord_core
     src/config.cpp
     src/discord/rest_client.cpp
     src/discord/service.cpp
+    src/voice/protocol.cpp
 )
 
 target_include_directories(ps5discord_core PUBLIC include)

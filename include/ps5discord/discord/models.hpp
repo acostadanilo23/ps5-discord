@@ -33,6 +33,7 @@ struct Channel {
     bool is_textual() const {
         return type == 0 || type == 5 || type == 10 || type == 11 || type == 12 || type == 15;
     }
+    bool is_voice() const { return type == 2; }
 };
 
 struct Attachment {
