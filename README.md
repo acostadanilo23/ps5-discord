@@ -1,38 +1,104 @@
 # ps5-discord
 
-Experimental Discord client for a jailbroken PlayStation 5.
+Experimental Discord text client for a jailbroken PlayStation 5.
 
-## Status
+## Current target: beta
 
-Target: **beta**, not a proof of concept. The project is being structured around a usable text-chat client with persistent session state, guild/channel navigation, message history, sending, realtime Gateway events, reconnect/backoff, rate-limit handling, and a controller-first UI.
+This repository is intentionally beyond a Hello World / MVP. The current beta architecture contains:
 
-The PS5 build is based on the public `ps5-native-app-boilerplate` / `ps5-homebrew-ui` ecosystem and does not require proprietary Sony SDK files.
+- current-user profile loading
+- server (guild) list
+- text-channel list
+- message history
+- manual text-message sending
+- attachment metadata
+- automatic short-poll chat refresh
+- basic Discord rate-limit handling
+- asynchronous network worker so rendering does not block
+- controller-first three-column PS5 UI
+- built-in on-screen keyboard
+- persistent token file outside `eboot.bin`
+- host console for validating the network layer before console deployment
+- unit tests for JSON/model parsing
+- GitHub Actions host CI
+- reproducible PS5 overlay build pinned to `ps5-homebrew-ui`
 
-## Important Discord note
+Voice/video are not part of the first beta.
 
-This repository is for personal experimental use. It does **not** include techniques for impersonating/fingerprinting the official Discord client or bypassing Discord enforcement. A user-token backend may violate Discord's terms even when operated manually. Use at your own risk.
+## Architecture
 
-## Planned beta feature set
+```text
+Discord HTTPS API
+       |
+       v
+RestClient ---- rate-limit handling
+       |
+       v
+Service worker ---- 1.5 s chat polling
+       |
+       +------------------+
+       |                  |
+       v                  v
+Host console        PS5 UI concept
+                      |
+               ps5-homebrew-ui
+                      |
+                ps5-opengl / native app
+```
 
-- Persistent local auth/session configuration
-- Current-user profile
-- Guild list
-- Text-channel list
-- Message history with pagination
-- Send text messages manually
-- Gateway WebSocket event stream
-- Heartbeat, reconnect, exponential backoff and resume state
-- Basic replies/reactions display
-- Image/attachment metadata and URLs
-- Controller-first three-column Discord-style UI
-- On-screen text entry
-- Host build/test path before PS5 deployment
-- PS5 package output suitable for ShadowMountPlus-style deployment
+The network/service layer is independent from the PS5 UI so the transport can be replaced later without rewriting the application.
 
-Voice is intentionally out of the first beta.
+## Host quick start
 
-## Build architecture
+```bash
+sudo apt install -y build-essential cmake pkg-config libcurl4-openssl-dev
+cmake -S . -B build
+cmake --build build -j
+ctest --test-dir build --output-on-failure
 
-The repository keeps application/network code independent from the PS5 toolchain. `scripts/bootstrap-ps5.sh` creates a pinned PS5 build workspace from the public homebrew toolchain and overlays this project's sources.
+export PS5_DISCORD_TOKEN='...'
+./build/ps5-discord-host
+```
 
-More detailed build and deployment instructions will live in `docs/BUILDING.md` as the beta is assembled.
+## PS5 build
+
+Install the public homebrew toolchain prerequisites, then:
+
+```bash
+chmod +x scripts/bootstrap-ps5.sh
+./scripts/bootstrap-ps5.sh
+```
+
+The default development title ID is `PPSA99251`. Override it when needed:
+
+```bash
+TITLE_ID=PPSA12345 ./scripts/bootstrap-ps5.sh
+```
+
+Output is copied to `dist/<TITLE_ID>/` and `dist/<TITLE_ID>.zip`.
+
+Detailed instructions: [`docs/BUILDING.md`](docs/BUILDING.md).
+
+## Authentication on PS5
+
+The credential is deliberately not compiled into the application. The PS5 build reads:
+
+```text
+/download0/ps5-discord/token.txt
+```
+
+The UI explains this path when no token exists and lets you retry with Triangle.
+
+## Controller mapping
+
+- D-pad: navigate rows / switch columns
+- Cross: open server or channel
+- Square: compose in an open chat
+- Triangle: refresh
+- Compose: Cross types, Square deletes, Triangle inserts a space, Options sends, Circle cancels
+
+## Discord / account warning
+
+This is a personal experimental client. It does not include client-fingerprint spoofing, automated actions, spam tooling, or enforcement-evasion logic. It identifies its HTTP traffic as `ps5-discord`.
+
+Using a normal user credential from an alternative client may violate Discord's terms and Discord may change undocumented behavior at any time. Use at your own risk and never commit credentials to this repository.
