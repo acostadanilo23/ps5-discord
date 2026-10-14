@@ -1,0 +1,22 @@
+name: ps5-build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install public toolchain prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git make ninja-build ccache pkg-config python3 python3-pip python3-venv tar wget unzip clang-18 lld-18
+      - name: Build PS5 application
+        run: bash scripts/bootstrap-ps5.sh
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps5-discord-package
+          path: dist/
